@@ -1,0 +1,33 @@
+receivers:
+  hostmetrics:
+    collection_interval: 15s
+    scrapers:
+      cpu:
+      memory:
+      load:
+      disk:
+      filesystem:
+      network:
+
+  docker_stats:
+    endpoint: unix:///var/run/docker.sock
+    collection_interval: 15s
+
+processors:
+  resourcedetection:
+    detectors: [env, system]
+  batch:
+    send_batch_size: 512
+    timeout: 5s
+    send_batch_max_size: 1024
+
+exporters:
+  otlphttp/prometheus:
+    endpoint: http://192.168.0.62:9090/api/v1/otlp
+
+service:
+  pipelines:
+    metrics:
+      receivers: [hostmetrics, docker_stats]
+      processors: [resourcedetection, batch]
+      exporters: [otlphttp/prometheus]
